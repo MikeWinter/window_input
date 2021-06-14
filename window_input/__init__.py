@@ -404,19 +404,24 @@ class Window:
         dc_obj = win32ui.CreateDCFromHandle(w_dc)
         c_dc = dc_obj.CreateCompatibleDC()
         data_bit_map = win32ui.CreateBitmap()
-        data_bit_map.CreateCompatibleBitmap(dc_obj, w, h)
-        c_dc.SelectObject(data_bit_map)
-        c_dc.BitBlt((0, 0), (w, h), dc_obj, region[0], win32con.SRCCOPY)
-        bmpinfo = data_bit_map.GetInfo()
-        bmpstr = data_bit_map.GetBitmapBits(True)
+        try:
+            data_bit_map.CreateCompatibleBitmap(dc_obj, w, h)
+            c_dc.SelectObject(data_bit_map)
+            c_dc.BitBlt((0, 0), (w, h), dc_obj, region[0], win32con.SRCCOPY)
+            bmpinfo = data_bit_map.GetInfo()
+            bmpstr = data_bit_map.GetBitmapBits(True)
 
-        if was_mini:
-            win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)
+            if was_mini:
+                win32gui.ShowWindow(self.hwnd, win32con.SW_MINIMIZE)
 
-        return Image.frombuffer(
-            'RGB',
-            (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
-            bmpstr, 'raw', 'BGRX', 0, 1)
+            return Image.frombuffer(
+                'RGB',
+                (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
+                bmpstr, 'raw', 'BGRX', 0, 1)
+        finally:
+            win32gui.DeleteObject(data_bit_map.GetHandle())
+            c_dc.DeleteDC()
+            win32gui.ReleaseDC(self.hwnd, w_dc)
 
     def click(self, x=None, y=None, button=Key.VK_LBUTTON, duration=.2):
         if x:
