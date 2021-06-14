@@ -400,11 +400,15 @@ class Window:
 
         w = region[1][0] - region[0][0]
         h = region[1][1] - region[0][1]
-        w_dc = win32gui.GetWindowDC(self.hwnd)
-        dc_obj = win32ui.CreateDCFromHandle(w_dc)
-        c_dc = dc_obj.CreateCompatibleDC()
-        data_bit_map = win32ui.CreateBitmap()
+
+        w_dc = None
+        c_dc = None
+        data_bit_map = None
         try:
+            w_dc = win32gui.GetWindowDC(self.hwnd)
+            dc_obj = win32ui.CreateDCFromHandle(w_dc)
+            c_dc = dc_obj.CreateCompatibleDC()
+            data_bit_map = win32ui.CreateBitmap()
             data_bit_map.CreateCompatibleBitmap(dc_obj, w, h)
             c_dc.SelectObject(data_bit_map)
             c_dc.BitBlt((0, 0), (w, h), dc_obj, region[0], win32con.SRCCOPY)
@@ -419,9 +423,12 @@ class Window:
                 (bmpinfo['bmWidth'], bmpinfo['bmHeight']),
                 bmpstr, 'raw', 'BGRX', 0, 1)
         finally:
-            win32gui.DeleteObject(data_bit_map.GetHandle())
-            c_dc.DeleteDC()
-            win32gui.ReleaseDC(self.hwnd, w_dc)
+            if data_bit_map:
+                win32gui.DeleteObject(data_bit_map.GetHandle())
+            if c_dc:
+                c_dc.DeleteDC()
+            if w_dc:
+                win32gui.ReleaseDC(self.hwnd, w_dc)
 
     def click(self, x=None, y=None, button=Key.VK_LBUTTON, duration=.2):
         if x:
